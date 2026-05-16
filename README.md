@@ -1,8 +1,8 @@
 
-#1.Título del proyecto
+# 1.Título del proyecto
 Pre-procesamiento de secuencias de genomas completos de E.coli obtenidos de DRYAD
 
-#2. Introducción
+# 2. Introducción
 Debido a que todavía no cuento con secuencias genómicas para desarrollar mi proyecto de doctorado, 
 para el proyecto del curso utilicé lecturas genómicas de *E. coli* descargadas de Dryad con el fin de diseñar, probar y documentar 
 un script reproducible que posteriormente pueda usar para mi proyecto doctoral  filogenómica del complejo *Psittacara* de México y
@@ -21,7 +21,7 @@ Evalúa la calidad de las lecturas
 Realiza trimming y filtrado por calidad
 Envía mensajes automáticos a mi Telegram para saber cuándo se terminó cada proceso y notifica si hay alguna muestra que no se procesó 
 
-##Descripción general del flujo de trabajo
+## Descripción general del flujo de trabajo
 1. Variables: Primero se definen las rutas del proyecto, las carpetas de trabajo, en donde se guardan resultados y los contenedores
 2. Configuracion de Telegram
 3. Carpetas: Luego se preparan las carpetas para guardar contenedores, datos, resultados lecturas filtradas 
@@ -38,7 +38,7 @@ que haya archivos en par (R1 y R2), las muestras que no cumplan con esto se omit
 11. Resultados: Se reporta el número de muestras válidas y omitidas asi como sus claves
 12. Notificación a telegram: el script manda avisos al terminar los procesos de FASTQC, fastp y el resumen final   
 
-##5. Estructura del repositorio
+## 5. Estructura del repositorio
  mgaspar@biomolecular:~/ProyectoFinal$ tree
 ├── datos
 
@@ -65,11 +65,11 @@ Apptainer
 FastQC 0.11.9 
 fastp 0.20.1 
 
-##7. Reproducibilidad
+## 7. Reproducibilidad
 Este script es reproducible porque usa Apptainer, lo que facilita no tener que estar descargando FASTQC y 
 fastp manualmente y además hay una sección (sección 4) en la que se descargan los contenedores automáticamente.
 
-##8. El script se puede ejecutar así:
+## 8. El script se puede ejecutar así:
 
 Primero hay que clonar el repositorio:
 
@@ -84,7 +84,7 @@ chmod 740 preprocesamiento.sh
 Para ejecutar el pipeline: 
 ./preprocesamiento.sh
 
-##9. Entradas y salidas
+## 9. Entradas y salidas
 Entrada: archivos FASTQ en carpeta raw dentro de datos
 Salidas
 Revisión de calidad inicial
@@ -94,7 +94,7 @@ En la carpeta 02_lecturas_filtradas se genera: R1 y R2_trimmed.fastq.gz,, fastp.
 Revisión de calidad posterior al trimming
 En carpeta 03_calidad_post_filtrado se genera los archivos fastq.gz y fasqc.zip
 
-##10. Información del sistema
+## 10. Información del sistema
 Este proyecto fue probado en el siguiente equipo:
 
 - Tipo de equipo: servidor

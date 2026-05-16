@@ -1,0 +1,13 @@
+# Datos grandes
+datos/raw/*.fastq.gz
+
+# Contenedores pesados
+programas_contenedores/*.sif
+
+# Resultados generados
+resultados/01_calidad_inicial/*
+!resultados/01_calidad_inicial/.gitkeep
+resultados/02_lecturas_filtradas/*
+!resultados/02_lecturas_filtradas/.gitkeep
+resultados/03_calidad_post_filtrado/*
+!resultados/03_calidad_post_filtrado/.gitkeep

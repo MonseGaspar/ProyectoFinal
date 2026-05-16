@@ -41,13 +41,21 @@ que haya archivos en par (R1 y R2), las muestras que no cumplan con esto se omit
 ##5. Estructura del repositorio
  mgaspar@biomolecular:~/ProyectoFinal$ tree
 ├── datos
+
 │   └── raw
+
 ├── programas_contenedores
+
 ├── README.md
+
 ├── resultados
+
 │   ├── 01_calidad_inicial
+
 │   ├── 02_lecturas_filtradas
+
 │   └── 03_calidad_post_filtrado
+
 └── scripts
     └── procesamiento.sh
 

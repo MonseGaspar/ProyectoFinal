@@ -57,6 +57,7 @@ que haya archivos en par (R1 y R2), las muestras que no cumplan con esto se omit
 │   └── 03_calidad_post_filtrado
 
 └── scripts
+    
     └── procesamiento.sh
 
 ##6. Requisitos de software

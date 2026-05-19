@@ -40,6 +40,7 @@ que haya archivos en par (R1 y R2), las muestras que no cumplan con esto se omit
 
 ## 5. Estructura del repositorio
  mgaspar@biomolecular:~/ProyectoFinal$ tree
+
 ├── datos
 
 │   └── raw

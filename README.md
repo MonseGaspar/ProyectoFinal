@@ -15,10 +15,15 @@ evaluar la calidad de las lecturas, realizar la limpieza de adaptadores y bases 
 
 ## 3. Objetivo
 Este script es un pipeline reproducible para realizar el preprocesamiento de lecturas genómicas 
+
 Verifica que los archivos FASTQ no tengan errores
+
 Identifica muestras que deben omitirse por problemas de integridad o formato
+
 Evalúa la calidad de las lecturas
+
 Realiza trimming y filtrado por calidad
+
 Envía mensajes automáticos a mi Telegram para saber cuándo se terminó cada proceso y notifica si hay alguna muestra que no se procesó 
 
 ## Descripción general del flujo de trabajo

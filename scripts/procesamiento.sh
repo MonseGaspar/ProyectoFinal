@@ -91,7 +91,7 @@ fi
 
 ### 7. BUSCAR ARCHIVOS R1 ###
 #busca todos los archivos que terminen asi _R1_001.fastq.gz
-shopt -s nullglob
+
 R1_FILES=("$RAW"/*_R1_001.fastq.gz)
 
 # Si no se hay archivos R1, se manda un aviso y se detiene el script

@@ -1,10 +1,12 @@
+
 #!/bin/bash
+
 # Pre-procesamiento de secuencias de genomas completos obtenidos de DRYAD
 # Monserrat Gaspar Argote
 # Creado: 1 abril 2026
-# Actualización: 7 mayo 2026
+# Actualizacion: 7 mayo 2026
 
-### 1. DEFINIR VARIABLES#
+### 1. DEFINIR RUTAS ###
 
 PROYECTO="$HOME/ProyectoFinal"
 RAW="$PROYECTO/datos/raw"
@@ -14,215 +16,250 @@ RESULTADOS="$PROYECTO/resultados"
 FASTQC_SIF="$CONTENEDORES/fastqc.sif"
 FASTP_SIF="$CONTENEDORES/fastp.sif"
 
-# Telegram
-TELEGRAM_TOKEN="Aqui coloca tu TOKEN "
+# Configurar el Telegram :)
+TELEGRAM_TOKEN="8770188323:AAHQ7lD09beNd1Jmr7lHIMoT5ysuZLwRFoI"
 TELEGRAM_CHAT_ID="6266082248"
 
-#### 2. configrar telegram ##
+
+### 2. FUNCION PARA ENVIAR MENSAJES A TELEGRAM ###
+
 
 enviar_telegram() {
-    local MENSAJE="$1"
-
-    [[ -z "${TELEGRAM_TOKEN:-}" || -z "${TELEGRAM_CHAT_ID:-}" ]] && return 0
-
-    if ! command -v curl >/dev/null 2>&1; then
-        echo "Aviso: curl no está instalado; no se enviará mensaje a Telegram."
-        return 0
-    fi
-
-    RESPUESTA=$(curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
         --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
-        --data-urlencode "text=${MENSAJE}")
-
-    echo "Respuesta Telegram: $RESPUESTA"
+        --data-urlencode "text=${MENSAJE}"
 }
+## prueba mandando un mensaje a mi telegram
+# Prueba mandando un mensaje a Telegram
+MENSAJE="Comenzando a trabajar"
+enviar_telegram
 
-listar_omitidas() {
-    local TEXTO=""
-    for i in "${!SKIPPED_SAMPLES[@]}"; do
-        TEXTO+=$'\n'"- ${SKIPPED_SAMPLES[$i]}: ${SKIPPED_REASONS[$i]}"
-    done
-    printf '%s' "$TEXTO"
-}
+### 3. FUNCION PARA REVISAR ARCHIVOS en FASTA,
+# aqui solo estoy dando instrucciones (validar_fastq) aún no esta validando los archivos
 
 validar_fastq() {
-    local FILE="$1"
+    ARCHIVO="$1"
 
-    gzip -t "$FILE" 2>/dev/null || {
-        echo "Archivo .gz corrupto: $FILE"
+    # Gzip verifica que el archivo .gz este correctamente comprimido con -t 
+    if ! gzip -t "$ARCHIVO"; then
+        echo "Archivo .gz corrupto: $ARCHIVO"
         return 1
-    }
+    fi
 
-    zcat "$FILE" | awk '
+    # Luego con zcat revisamos el archivo sin descomprimirlo, con awk checamos que elfasta tenga la estructura correcta
+    # es decir:registros de cuatro lineas, donde la primera linea empieza con @, 
+    #la tercera empieza con +, y el numero total de lineas debe ser multiplo de cuatro.
+    if ! zcat "$ARCHIVO" | awk '
         NR % 4 == 1 && $0 !~ /^@/ {exit 1}
-        NR % 4 == 2 {seq_len = length($0)}
         NR % 4 == 3 && $0 !~ /^\+/ {exit 1}
-        NR % 4 == 0 && length($0) != seq_len {exit 1}
         END {if (NR % 4 != 0) exit 1}
-    ' >/dev/null || {
-        echo "Archivo FASTQ inválido: $FILE"
+    '; then
+    #si no cumple entonces manda aviso de cual es el archivo que no funcionó
+        echo "Archivo invalido: $ARCHIVO"
         return 1
-    }
+    fi
+
+    return 0
 }
 
-error_script() {
-    local LINEA="$1"
-    enviar_telegram "Falla en el script de preprocesamiento. Línea: $LINEA"
-}
-trap 'error_script $LINENO' ERR
 
-### 3. PREPARAR CARPETAS DE TRABAJO ###
+### 4. CREAR CARPETAS DE TRABAJO ###
 
-mkdir -p "$CONTENEDORES" \
-         "$RESULTADOS/01_calidad_inicial" \
-         "$RESULTADOS/02_lecturas_filtradas" \
-         "$RESULTADOS/03_calidad_post_filtrado"
+mkdir -p "$CONTENEDORES"                         #aqui van los contenedores
+mkdir -p "$RESULTADOS/01_calidad_inicial"        #resultados de FastQC antes del filtrado
+mkdir -p "$RESULTADOS/02_lecturas_filtradas"     #archivos generados por fastp 
+mkdir -p "$RESULTADOS/03_calidad_post_filtrado"  #mis resultados de FastQC despues del filtrado
 
-### 4. LIMPIAR RESULTADOS DE INTENTOS PREVIOS ###
 
-rm -f "$RESULTADOS"/01_calidad_inicial/*
-rm -f "$RESULTADOS"/02_lecturas_filtradas/*
-rm -f "$RESULTADOS"/03_calidad_post_filtrado/*
+### 5. Eliminar intentos fallidos
+#rm con * borra todos los archivos previos, -f no pregunta entonces no se detiene el script
+rm -f "$RESULTADOS/01_calidad_inicial"/*
+rm -f "$RESULTADOS/02_lecturas_filtradas"/*
+rm -f "$RESULTADOS/03_calidad_post_filtrado"/*
 
-### 5. DESCARGAR CONTENEDORES ###
 
-[[ -f "$FASTQC_SIF" ]] || apptainer pull "$FASTQC_SIF" docker://biocontainers/fastqc:v0.11.9_cv8
-[[ -f "$FASTP_SIF"  ]] || apptainer pull "$FASTP_SIF"  docker://biocontainers/fastp:v0.20.1_cv1
+### 6. DESCARGAR CONTENEDORES
+#si no existen las imágenes las descarga
 
-### 6. VERIFICAR QUE EXISTAN ARCHIVOS FASTQ ###
+if [[ ! -f "$FASTQC_SIF" ]]; then
+    apptainer pull "$FASTQC_SIF" docker://biocontainers/fastqc:v0.11.9_cv8
+fi
 
+if [[ ! -f "$FASTP_SIF" ]]; then
+    apptainer pull "$FASTP_SIF" docker://biocontainers/fastp:v0.20.1_cv1
+fi
+
+### 7. BUSCAR ARCHIVOS R1 ###
+#busca todos los archivos que terminen asi _R1_001.fastq.gz
+shopt -s nullglob
 R1_FILES=("$RAW"/*_R1_001.fastq.gz)
 
+# Si no se hay archivos R1, se manda un aviso y se detiene el script
 if (( ${#R1_FILES[@]} == 0 )); then
-    MSG=" no se encontraron archivos R1 en $RAW"
-    echo "$MSG"
-    enviar_telegram "$MSG"
+    MENSAJE="No se encontraron archivos R1 en $RAW"
+    echo "$MENSAJE"
+    enviar_telegram
     exit 1
 fi
 
-### 7.Validación, aqui se identifica las muestras con errores y las que son validas y continuaran en el proceso ###
 
-VALID_R1=()
-VALID_R2=()
-VALID_RAW_FILES=()
-VALID_SAMPLES=()
 
-SKIPPED_SAMPLES=()
-SKIPPED_REASONS=()
+### 8. VALIDAR MUESTRAS ###
+#hacer listas
+validos_R1=()    #aqui se guardan los archivos R1 que si sirven
+validos_R2=()    #aqui se guardan los archivos R2 que si sirven
+muestras_validas=() #aqui se guardan los nombres de las muestras que si se van a procesar
+muestras_omitidas=()   #aqui se guardan las muestras que no se van a procesar y la razon
 
+#Para cada archivo R1 encontrado en la lista R1_FILES
 for R1 in "${R1_FILES[@]}"; do
+#identifica el codigo de R1 y busca su par r2
     MUESTRA="$(basename "$R1" _R1_001.fastq.gz)"
     R2="$RAW/${MUESTRA}_R2_001.fastq.gz"
 
     echo "Revisando muestra: $MUESTRA"
-
+#Si no existe el archivo R2, la marca como "Falta R2" y pasa a la siguiente muestra.
     if [[ ! -f "$R2" ]]; then
-        SKIPPED_SAMPLES+=("$MUESTRA")
-        SKIPPED_REASONS+=("Falta R2")
+        muestras_omitidas+=("$MUESTRA: Falta R2")
         continue
     fi
-
+# Se aplica la funcion validar_fastq al archivo R1 y R2
+# Si R1 o R2 estaN corruptos o no tienen estructura basica se omite.
     if ! validar_fastq "$R1"; then
-        SKIPPED_SAMPLES+=("$MUESTRA")
-        SKIPPED_REASONS+=("R1 corrupto o mal formado")
+        muestras_omitidas+=("$MUESTRA: R1 con mal formato")
         continue
     fi
 
     if ! validar_fastq "$R2"; then
-        SKIPPED_SAMPLES+=("$MUESTRA")
-        SKIPPED_REASONS+=("R2 corrupto o mal formado")
+        muestras_omitidas+=("$MUESTRA: R2 con mal formato")
         continue
     fi
 
-    VALID_R1+=("$R1")
-    VALID_R2+=("$R2")
-    VALID_RAW_FILES+=("$R1" "$R2")
-    VALID_SAMPLES+=("$MUESTRA")
+    # Si la muestra paso todas las revisiones..... 
+    validos_R1+=("$R1")          # Guarda el archivo R1 valido
+    validos_R2+=("$R2")          # Guarda el archivo R2 valido
+    muestras_validas+=("$MUESTRA")  # Guarda el nombre de la muestra valida
+
 done
 
-if (( ${#VALID_SAMPLES[@]} == 0 )); then
-    MSG="Validación terminada: no hay muestras válidas para procesar."
-    echo "$MSG"
-    enviar_telegram "$MSG"
+# Si despues de revisar no quedo ninguna valida,
+# se manda un aviso y se detiene el script.
+if (( ${#muestras_validas[@]} == 0 )); then
+    MENSAJE=" no hay muestras validas para procesar."
+    echo "$MENSAJE"
+    enviar_telegram
     exit 1
 fi
 
-MENSAJE_VALIDACION="Validación completada.
-Muestras válidas: ${#VALID_SAMPLES[@]}
-Muestras omitidas: ${#SKIPPED_SAMPLES[@]}$(listar_omitidas)"
+#Si hubo muestras validas, el script avisa cuantas muestras pasaron y cuantas fueron omitidas.
+#Ese resumen se imprime en la terminal y tambien se manda a Telegram
 
-echo "Enviando aviso de validación a Telegram..."
-enviar_telegram "$MENSAJE_VALIDACION"
+MENSAJE="Validacion completada.
+Muestras validas: ${#muestras_validas[@]}
+Muestras omitidas: ${#muestras_omitidas[@]}"
 
-### 8. Revision de las lecturas crudas con FASTQC ###
+echo "$MENSAJE"
+enviar_telegram
 
+
+### 9. FASTQC DE LECTURAS CRUDAS ###
+#se hcae una sola lista de todos los archivos validos
+archivos_crudos_validos=("${validos_R1[@]}" "${validos_R2[@]}")
+#ejecuta FASTQC con apptainer y la imagen creada y los manda a 01 calidad inicial
 apptainer exec --bind "$PROYECTO:$PROYECTO" \
 "$FASTQC_SIF" \
-fastqc "${VALID_RAW_FILES[@]}" \
+fastqc "${archivos_crudos_validos[@]}" \
 -o "$RESULTADOS/01_calidad_inicial"
 
-echo "Enviando aviso de FastQC inicial a Telegram..."
-enviar_telegram "FastQC inicial terminado.
-Archivos analizados: ${#VALID_RAW_FILES[@]}"
+MENSAJE="FastQC 01 terminado.
+Archivos analizados: ${#archivos_crudos_validos[@]}"
+enviar_telegram
 
-### 9. Filtrado y trimming con fastp ###
 
-for i in "${!VALID_R1[@]}"; do
-    R1="${VALID_R1[$i]}"
-    R2="${VALID_R2[$i]}"
-    MUESTRA="${VALID_SAMPLES[$i]}"
+### 10. FILTRADO Y TRIMMING CON FASTP # toma cada par R1 y R2, les quita adaptadores 
+#filtra lecturas de baja calidad y genera archivos nuevos ya filtrados
 
-    echo "Procesando muestra válida: $MUESTRA"
+#primero los archivos validos los empareja con R2 y comienza a procesar 
 
+for i in "${!validos_R1[@]}"; do
+
+    R1="${validos_R1[$i]}"
+    R2="${validos_R2[$i]}"
+    MUESTRA="${muestras_validas[$i]}"
+# y avisa en la terminal que muestra esta trabajando
+    echo "Procesando muestra valida: $MUESTRA"
+#ejecuta fastp con apptainer y se indica que archivos procesar la i minuscula es para R1 y la I mayuscula R2
+    #detectar adaptadores
+   # Q20 como umbral minimo de calidad
+    #largo de las lecturas,descarta lecturas menores a 50pb
     apptainer exec --bind "$PROYECTO:$PROYECTO" \
     "$FASTP_SIF" \
     fastp \
     -i "$R1" \
     -I "$R2" \
-    -o "$RESULTADOS/02_lecturas_filtradas/${MUESTRA}_R1_trimmed.fastq.gz" \
-    -O "$RESULTADOS/02_lecturas_filtradas/${MUESTRA}_R2_trimmed.fastq.gz" \
+    -o "$RESULTADOS/02_lecturas_filtradas/${MUESTRA}_R1_filtrado.fastq.gz" \
+    -O "$RESULTADOS/02_lecturas_filtradas/${MUESTRA}_R2_filtrado.fastq.gz" \
     --detect_adapter_for_pe \
     --qualified_quality_phred 20 \
     --length_required 50 \
     --html "$RESULTADOS/02_lecturas_filtradas/${MUESTRA}_fastp.html" \
     --json "$RESULTADOS/02_lecturas_filtradas/${MUESTRA}_fastp.json"
+
 done
 
-echo "Enviando aviso de fastp a Telegram..."
-enviar_telegram "Filtrado y trimming listos.
-Muestras procesadas: ${#VALID_SAMPLES[@]}"
+MENSAJE="Filtrado y trimming listos.
+Muestras procesadas: ${#muestras_validas[@]}"
+enviar_telegram
 
-### 10.Con FASTQC revision de las lecturas ya filtradas  ###
 
-TRIMMED_FILES=("$RESULTADOS"/02_lecturas_filtradas/*_trimmed.fastq.gz)
 
-if (( ${#TRIMMED_FILES[@]} > 0 )); then
-    apptainer exec --bind "$PROYECTO:$PROYECTO" \
-    "$FASTQC_SIF" \
-    fastqc "${TRIMMED_FILES[@]}" \
-    -o "$RESULTADOS/03_calidad_post_filtrado"
+### 11. FASTQC DE LECTURAS FILTRADAS ###
 
-    echo "Enviando aviso de FastQC final a Telegram..."
-    enviar_telegram " FastQC final terminado.
-Archivos filtrados evaluados: ${#TRIMMED_FILES[@]}"
+# Busca los archivos filtrados generados por fastp
+archivos_filtrados=("$RESULTADOS"/02_lecturas_filtradas/*_filtrado.fastq.gz)
+
+# Si no se encontraron archivos filtrados, se manda un aviso y se detiene el script
+if (( ${#archivos_filtrados[@]} == 0 )); then
+    MENSAJE="No se encontraron archivos filtrados para FastQC final."
+    echo "$MENSAJE"
+    enviar_telegram
+    exit 1
 fi
+# Se ejecuta FastQC con las lecturas filtradas
+apptainer exec --bind "$PROYECTO:$PROYECTO" \
+"$FASTQC_SIF" \
+fastqc "${archivos_filtrados[@]}" \
+-o "$RESULTADOS/03_calidad_post_filtrado"
 
-### 11.Resultdos se manda el resumen final a telegram ###
+# enviar aviso por Telegram
+MENSAJE="FastQC final terminado.
+Archivos filtrados evaluados: ${#archivos_filtrados[@]}"
+enviar_telegram
 
-echo "========================================"
-echo "Resumen final del preprocesamiento"
-echo "Muestras válidas analizadas: ${#VALID_SAMPLES[@]}"
-printf '  - %s\n' "${VALID_SAMPLES[@]}"
-echo "Muestras omitidas: ${#SKIPPED_SAMPLES[@]}"
-for i in "${!SKIPPED_SAMPLES[@]}"; do
-    echo "  - ${SKIPPED_SAMPLES[$i]} -> ${SKIPPED_REASONS[$i]}"
-done
-echo "========================================"
+
+### 12. RESUMEN FINAL ###
+
+echo ""
 echo "Preprocesamiento completado."
+echo "Muestras revisadas: ${#R1_FILES[@]}"
+echo "Muestras validas analizadas: ${#muestras_validas[@]}"
+echo "Muestras no validas y omitidas: ${#muestras_omitidas[@]}"
 
-MENSAJE_FINAL="Preprocesamiento completado.
-Muestras válidas: ${#VALID_SAMPLES[@]}
-Muestras omitidas: ${#SKIPPED_SAMPLES[@]}$(listar_omitidas)"
+echo ""
+echo "Muestras omitidas:"
+printf '  - %s\n' "${muestras_omitidas[@]}"
 
-echo "Enviando aviso final a Telegram..."
-enviar_telegram "$MENSAJE_FINAL"
+MENSAJE="Preprocesamiento completado.
+Muestras revisadas: ${#R1_FILES[@]}
+Muestras validas analizadas: ${#muestras_validas[@]}
+Muestras no validas y omitidas: ${#muestras_omitidas[@]}
+
+Muestras omitidas:
+$(printf '  - %s\n' "${muestras_omitidas[@]}")"
+
+enviar_telegram
+
+   
+
+  
+

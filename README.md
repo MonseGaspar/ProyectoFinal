@@ -38,7 +38,7 @@ usé un condicional si no existen se descarga FASTQC y fastp.
 7. Validación de FASTQC: se verifica que el archivo no este corrupto, que tenga estructura correcta, 
 que haya archivos en par (R1 y R2), las muestras que no cumplan con esto se omiten del proceso y se registran mandando mensaje a telegram.
 8. Revisión de la calidad de las lecturas: Ejecuta FASTQC con las muestras que pasaron la validación
-9. Filtrado y trimming con fastp: en pares R1/R2 se detectan adaptadores, elimina bases de baja calidad y lecturas muy cortas.
+9. Limpieza con fastp: en pares R1/R2 se detectan adaptadores, elimina bases de baja calidad y lecturas muy cortas.
 10. Revisión de lecturas filtradas: Con FASTQC se revisan nuevamente la calidad de las lecturas
 11. Resultados: Se reporta el número de muestras válidas y omitidas asi como sus claves
 12. Notificación a telegram: el script manda avisos al terminar los procesos de FASTQC, fastp y el resumen final   

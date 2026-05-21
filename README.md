@@ -29,7 +29,7 @@ Envía mensajes automáticos a mi Telegram para saber cuándo se terminó cada p
 para que el flujo inicie desde cero
 5. Contenedores: Se descarga las imágenes del software que usaré en Apptainer, 
 usé un condicional si no existen se descarga FASTQC y fastp.
-6. Existencia de archivos FASTQ: Se revisa que existan los archivos en la carpeta
+6. Existencia de archivos FASTA: Se revisa que existan los archivos en la carpeta
 7. Validación de FASTQC: se verifica que el archivo no este corrupto, que tenga estructura correcta, 
 que haya archivos en par (R1 y R2), las muestras que no cumplan con esto se omiten del proceso y se registran mandando mensaje a telegram.
 8. Revisión de la calidad de las lecturas: Ejecuta FASTQC con las muestras que pasaron la validación

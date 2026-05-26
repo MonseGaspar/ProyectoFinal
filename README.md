@@ -111,7 +111,6 @@ Este proyecto fue probado en el siguiente equipo:
 - Tipo de equipo: servidor
 - Sistema operativo: Ubuntu 
 - CPU: QEMU Virtual CPU version 2.5
-- Núcleos / hilos: 8 / 8
 - RAM: 15 GiB
 - Almacenamiento: disco de 500 GB
 Tiempo de ejecución 24 minutos 

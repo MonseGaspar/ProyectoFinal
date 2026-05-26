@@ -67,9 +67,13 @@ que haya archivos en par (R1 y R2). Las muestras que no cumplan con esto se omit
     └── procesamiento.sh
 
 ##6. Requisitos de software
+
 Bash 
+
 Apptainer 
+
 FastQC 0.11.9 
+
 fastp 0.20.1 
 
 ## 7. Reproducibilidad

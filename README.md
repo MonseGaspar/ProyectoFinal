@@ -35,8 +35,8 @@ para que el flujo inicie desde cero
 5. Contenedores: Se descarga las imágenes del software que usaré en Apptainer, 
 usé un condicional si no existen se descarga FASTQC y fastp.
 6. Existencia de archivos FASTQ: Se revisa que existan los archivos en la carpeta
-7. Validación de FASTQC: se verifica que el archivo no este corrupto, que tenga estructura correcta, 
-que haya archivos en par (R1 y R2), las muestras que no cumplan con esto se omiten del proceso y se registran mandando mensaje a telegram.
+7. Validación de FASTQ: se verifica que los archivos tengan la estructura correcta, 
+que haya archivos en par (R1 y R2). Las muestras que no cumplan con esto se omiten del proceso y se registran mandando mensaje a telegram.
 8. Revisión de la calidad de las lecturas: Ejecuta FASTQC con las muestras que pasaron la validación
 9. Limpieza con fastp: en pares R1/R2 se detectan adaptadores, elimina bases de baja calidad y lecturas muy cortas.
 10. Revisión de lecturas filtradas: Con FASTQC se revisan nuevamente la calidad de las lecturas

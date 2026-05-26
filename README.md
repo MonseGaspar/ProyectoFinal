@@ -109,11 +109,10 @@ En carpeta 03_calidad_post_filtrado se genera los archivos fastq.gz y fasqc.zip
 Este proyecto fue probado en el siguiente equipo:
 
 - Tipo de equipo: servidor
-- Sistema operativo: Ubuntu 22.04.5 LTS
+- Sistema operativo: Ubuntu 
 - CPU: QEMU Virtual CPU version 2.5
 - Núcleos / hilos: 8 / 8
 - RAM: 15 GiB
-- GPU: no detectada 
 - Almacenamiento: disco de 500 GB
 Tiempo de ejecución 24 minutos 
 

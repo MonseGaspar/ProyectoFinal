@@ -101,7 +101,15 @@ if (( ${#R1_FILES[@]} == 0 )); then
     enviar_telegram
     exit 1
 fi
+R2_FILES=("$RAW"/*_R2_001.fastq.gz)
 
+# Si no se hay archivos R2, se manda un aviso y se detiene el script
+if (( ${#R2_FILES[@]} == 0 )); then
+    MENSAJE="No se encontraron archivos R2 en $RAW"
+    echo "$MENSAJE"
+    enviar_telegram
+    exit 1
+fi
 
 
 ### 8. VALIDAR MUESTRAS ###

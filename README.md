@@ -22,7 +22,7 @@ Identifica muestras que deben omitirse por problemas de integridad o formato
 
 Evalúa la calidad de las lecturas
 
-Elimina adaptadores y filtrado por calidad
+Elimina adaptadores y filtra por calidad
 
 Envía mensajes automáticos a mi Telegram para saber cuándo se terminó cada proceso y notifica si hay alguna muestra que no se procesó 
 

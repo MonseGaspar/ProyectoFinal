@@ -132,7 +132,7 @@ for R1 in "${R1_FILES[@]}"; do
         continue
     fi
 # Se aplica la funcion validar_fastq al archivo R1 y R2
-# Si R1 o R2 estaN corruptos o no tienen estructura basica se omite.
+# Si R1 o R2 estaN corruptos o no tienen estructura basica se omite
     if ! validar_fastq "$R1"; then
         muestras_omitidas+=("$MUESTRA: R1 con mal formato")
         continue
@@ -150,14 +150,6 @@ for R1 in "${R1_FILES[@]}"; do
 
 done
 
-# Si despues de revisar no quedo ninguna valida,
-# se manda un aviso y se detiene el script.
-if (( ${#muestras_validas[@]} == 0 )); then
-    MENSAJE=" no hay muestras validas para procesar."
-    echo "$MENSAJE"
-    enviar_telegram
-    exit 1
-fi
 
 #Si hubo muestras validas, el script avisa cuantas muestras pasaron y cuantas fueron omitidas.
 #Ese resumen se imprime en la terminal y tambien se manda a Telegram

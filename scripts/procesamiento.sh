@@ -165,7 +165,7 @@ enviar_telegram
 
 
 ### 9. FASTQC DE LECTURAS CRUDAS ###
-#se hcae una sola lista de todos los archivos validos
+#se hace una lista de todos los archivos validos
 archivos_crudos_validos=("${validos_R1[@]}" "${validos_R2[@]}")
 #ejecuta FASTQC con apptainer y la imagen creada y los manda a 01 calidad inicial
 apptainer exec --bind "$PROYECTO:$PROYECTO" \

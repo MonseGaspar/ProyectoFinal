@@ -34,33 +34,6 @@ enviar_telegram() {
 MENSAJE="Comenzando a trabajar"
 enviar_telegram
 
-### 3. FUNCION PARA REVISAR ARCHIVOS en FASTA,
-# aqui solo estoy dando instrucciones (validar_fastq) aún no esta validando los archivos
-
-validar_fastq() {
-    ARCHIVO="$1"
-
-    # Gzip verifica que el archivo .gz este correctamente comprimido con -t 
-    if ! gzip -t "$ARCHIVO"; then
-        echo "Archivo .gz corrupto: $ARCHIVO"
-        return 1
-    fi
-
-    # Luego con zcat revisamos el archivo sin descomprimirlo, con awk checamos que elfasta tenga la estructura correcta
-    # es decir:registros de cuatro lineas, donde la primera linea empieza con @, 
-    #la tercera empieza con +, y el numero total de lineas debe ser multiplo de cuatro.
-    if ! zcat "$ARCHIVO" | awk '
-        NR % 4 == 1 && $0 !~ /^@/ {exit 1}
-        NR % 4 == 3 && $0 !~ /^\+/ {exit 1}
-        END {if (NR % 4 != 0) exit 1}
-    '; then
-    #si no cumple entonces manda aviso de cual es el archivo que no funcionó
-        echo "Archivo invalido: $ARCHIVO"
-        return 1
-    fi
-
-    return 0
-}
 
 
 ### 4. CREAR CARPETAS DE TRABAJO ###
@@ -113,6 +86,35 @@ fi
 
 
 ### 8. VALIDAR MUESTRAS ###
+
+###  FUNCION PARA REVISAR ARCHIVOS en FASTA,
+# aqui solo estoy dando instrucciones (validar_fastq) aún no esta validando los archivos
+
+validar_fastq() {
+    ARCHIVO="$1"
+
+    # Gzip verifica que el archivo .gz este correctamente comprimido con -t 
+    if ! gzip -t "$ARCHIVO"; then
+        echo "Archivo .gz corrupto: $ARCHIVO"
+        return 1
+    fi
+
+    # Luego con zcat revisamos el archivo sin descomprimirlo, con awk checamos que elfasta tenga la estructura correcta
+    # es decir:registros de cuatro lineas, donde la primera linea empieza con @, 
+    #la tercera empieza con +, y el numero total de lineas debe ser multiplo de cuatro.
+    if ! zcat "$ARCHIVO" | awk '
+        NR % 4 == 1 && $0 !~ /^@/ {exit 1}
+        NR % 4 == 3 && $0 !~ /^\+/ {exit 1}
+        END {if (NR % 4 != 0) exit 1}
+    '; then
+    #si no cumple entonces manda aviso de cual es el archivo que no funcionó
+        echo "Archivo invalido: $ARCHIVO"
+        return 1
+    fi
+
+    return 0
+}
+#Validacion
 #hacer listas
 validos_R1=()    #aqui se guardan los archivos R1 que si sirven
 validos_R2=()    #aqui se guardan los archivos R2 que si sirven
